@@ -42,6 +42,7 @@ public class Fader : MonoBehaviour
     public void HideFade(Action method, float speed = 0.5f)
     {
         _fadeAnimation?.Kill();
+        Debug.Log("HideFade");
         _fadeAnimation = _canvasGroup.DOFade(0, speed).OnComplete(() => method?.Invoke());
     }
 
