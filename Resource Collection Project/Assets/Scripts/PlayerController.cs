@@ -42,6 +42,8 @@ public class PlayerController : MonoBehaviour
             if (!_isDragging)
                 MovePlayer();
         }
+        
+        animator.SetFloat("Speed", _agent.velocity.magnitude);
     }
 
     private void MovePlayer()
