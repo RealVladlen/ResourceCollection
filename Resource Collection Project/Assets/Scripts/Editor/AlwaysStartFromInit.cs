@@ -4,6 +4,7 @@ using UnityEditor.SceneManagement;
 [InitializeOnLoad]
 public static class AlwaysStartFromInit
 {
+    
     private const string InitScenePath = "Assets/Scenes/Init.unity"; // Укажите путь к вашей Init сцене.
 
     static AlwaysStartFromInit()
@@ -34,4 +35,5 @@ public static class AlwaysStartFromInit
             }
         }
     }
+    
 }

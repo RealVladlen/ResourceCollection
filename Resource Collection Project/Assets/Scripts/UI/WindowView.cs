@@ -22,6 +22,7 @@ namespace UI
 
         public virtual void Show(Action method = null)
         {
+            _canvasGroup.alpha = 0;
             _fadeAnimation?.Kill();
             _fadeAnimation = _canvasGroup.DOFade(1,0.25f).OnComplete(() => method?.Invoke());
         }
@@ -34,7 +35,11 @@ namespace UI
         public virtual void Hide(Action method = null)
         {
             _fadeAnimation?.Kill();
-            _fadeAnimation = _canvasGroup.DOFade(0,0.25f).OnComplete(() => method?.Invoke());
+            _fadeAnimation = _canvasGroup.DOFade(0,0.25f).OnComplete(() =>
+            {
+                method?.Invoke();
+                gameObject.SetActive(false);
+            });
         }
         
         public virtual void ExpressHide()

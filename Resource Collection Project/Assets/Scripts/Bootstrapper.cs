@@ -18,6 +18,8 @@ public class Bootstrapper : MonoBehaviour
         GameEventManager.CameraMoverStateMethod(false);
         
         yield return new WaitUntil(WindowsManager.Instance.Init);
+        yield return new WaitUntil(GameDataManager.Instance.Init);
+        
         WindowsManager.Instance.ShowWindow(EWindow.Loading);
         
         Fader.Instance.HideFade(null);
@@ -45,6 +47,9 @@ public class Bootstrapper : MonoBehaviour
         
         WindowsManager.Instance.HideWindow(EWindow.Loading);
         asyncLoad.allowSceneActivation = true;
+        
+        WindowsManager.Instance.ShowWindow(EWindow.GamePlay);
+        
         
         yield return new WaitForSeconds(0.5f);
         

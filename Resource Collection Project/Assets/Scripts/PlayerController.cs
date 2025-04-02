@@ -1,21 +1,25 @@
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.EventSystems;
+using System.Collections.Generic;
+using Building;
 
+[RequireComponent(typeof(ResourceGatherer))]
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private Animator animator;
-
+    
     private NavMeshAgent _agent;
     private bool _moveState;
-
-    private float _tapStartTime;
-    private float _tapThreshold = 0.2f; 
-
     private bool _isDragging;
+    private float _tapStartTime;
+    private float _tapThreshold = 0.2f;
+    private ResourceGatherer _resourceGatherer;
 
     private void Awake()
     {
         _agent = GetComponent<NavMeshAgent>();
+        _resourceGatherer = GetComponent<ResourceGatherer>();
     }
 
     private void OnEnable()
@@ -24,10 +28,12 @@ public class PlayerController : MonoBehaviour
     }
 
     private void Update()
-    {
+    { 
+        if (IsPointerOverUI()) return;
+
         if (Input.GetMouseButtonDown(0) && _moveState)
         {
-            _tapStartTime = Time.time; 
+            _tapStartTime = Time.time;
             _isDragging = false;
         }
 
@@ -40,17 +46,38 @@ public class PlayerController : MonoBehaviour
         if (Input.GetMouseButtonUp(0))
         {
             if (!_isDragging)
-                MovePlayer();
+                HandleClick();
         }
         
         animator.SetFloat("Speed", _agent.velocity.magnitude);
     }
 
-    private void MovePlayer()
+    private void HandleClick()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit))
-            _agent.SetDestination(hit.point);
+        {
+            if (hit.collider.TryGetComponent(out ResourceBuilding building))
+            {
+                MoveToBuilding(building);
+            }
+            else
+            {
+                ExitGathering();
+                _agent.SetDestination(hit.point);
+            }
+        }
+    }
+
+    private void MoveToBuilding(ResourceBuilding building)
+    {
+        _agent.SetDestination(building.GatherPoint.position);
+        _resourceGatherer.StartGathering(building);
+    }
+
+    private void ExitGathering()
+    {
+        _resourceGatherer.StopGathering();
     }
 
     private void UpdateMoveState(bool state) => _moveState = state;
@@ -58,5 +85,23 @@ public class PlayerController : MonoBehaviour
     private void OnDisable()
     {
         GameEventManager.OnPlayerMoverState -= UpdateMoveState;
+    }
+
+    private bool IsPointerOverUI()
+    {
+        if (EventSystem.current.IsPointerOverGameObject()) return true;
+
+        if (Input.touchCount > 0)
+        {
+            PointerEventData eventData = new PointerEventData(EventSystem.current)
+            {
+                position = Input.GetTouch(0).position
+            };
+            var results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(eventData, results);
+            return results.Count > 0;
+        }
+
+        return false;
     }
 }

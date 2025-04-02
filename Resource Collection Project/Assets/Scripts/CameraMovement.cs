@@ -1,5 +1,6 @@
 using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class CameraMovement : MonoBehaviour
 {
@@ -18,6 +19,7 @@ public class CameraMovement : MonoBehaviour
     private bool _moveBlock;
     private bool _zooming;
     private float _currentZoomVelocity;
+    private bool _ignoreFirstClick; // Защита от лишнего движения после закрытия UI
 
     private void OnEnable() => GameEventManager.OnCameraMoverState += UpdateMoveBlock;
     private void OnDisable() => GameEventManager.OnCameraMoverState -= UpdateMoveBlock;
@@ -30,7 +32,21 @@ public class CameraMovement : MonoBehaviour
 
     private void Update()
     {
-        if (!_moveBlock && !_zooming) Movement();
+        // Блокируем движение, если UI открыт или закрывается
+        if (_moveBlock || EventSystem.current.IsPointerOverGameObject()) 
+        {
+            _ignoreFirstClick = true;
+            return;
+        }
+
+        // Первый клик после закрытия UI игнорируется
+        if (_ignoreFirstClick && (Input.GetMouseButtonDown(0) || Input.touchCount > 0))
+        {
+            _ignoreFirstClick = false;
+            return;
+        }
+
+        if (!_zooming) Movement();
         Zoom();
     }
 
@@ -40,10 +56,23 @@ public class CameraMovement : MonoBehaviour
         _startDragSpeed = _dragSpeed;
     }
 
-    private void UpdateMoveBlock(bool state) => _moveBlock = state;
+    private void UpdateMoveBlock(bool state) 
+    { 
+        _moveBlock = state;
+        if (state) ResetCameraState(); // При блокировке сбрасываем состояние
+    }
+
+    private void ResetCameraState()
+    {
+        _dragMoveActive = false;
+        _zooming = false;
+        _lastMousePosition = Vector2.zero;
+    }
 
     private void Zoom()
     {
+        if (EventSystem.current.IsPointerOverGameObject()) return; 
+
         float zoomSpeed = 20f;  
         float smoothTime = 0.15f;
 
@@ -84,6 +113,7 @@ public class CameraMovement : MonoBehaviour
     
     private void Movement()
     {
+        if (EventSystem.current.IsPointerOverGameObject()) return; 
         if (Input.touchCount == 2) return; 
 
         float newSpeed = speed;
