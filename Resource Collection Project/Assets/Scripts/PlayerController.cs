@@ -15,6 +15,7 @@ public class PlayerController : MonoBehaviour
     private float _tapStartTime;
     private float _tapThreshold = 0.2f;
     private ResourceGatherer _resourceGatherer;
+    private ResourceBuilding _targetBuilding;
 
     private void Awake()
     {
@@ -50,6 +51,12 @@ public class PlayerController : MonoBehaviour
         }
         
         animator.SetFloat("Speed", _agent.velocity.magnitude);
+
+        if (_targetBuilding != null && _agent.remainingDistance <= _agent.stoppingDistance && !_agent.pathPending)
+        {
+            _resourceGatherer.StartGathering(_targetBuilding);
+            _targetBuilding = null;
+        }
     }
 
     private void HandleClick()
@@ -63,7 +70,7 @@ public class PlayerController : MonoBehaviour
             }
             else
             {
-                ExitGathering();
+                _resourceGatherer.StopGathering();
                 _agent.SetDestination(hit.point);
             }
         }
@@ -72,12 +79,7 @@ public class PlayerController : MonoBehaviour
     private void MoveToBuilding(ResourceBuilding building)
     {
         _agent.SetDestination(building.GatherPoint.position);
-        _resourceGatherer.StartGathering(building);
-    }
-
-    private void ExitGathering()
-    {
-        _resourceGatherer.StopGathering();
+        _targetBuilding = building;
     }
 
     private void UpdateMoveState(bool state) => _moveState = state;

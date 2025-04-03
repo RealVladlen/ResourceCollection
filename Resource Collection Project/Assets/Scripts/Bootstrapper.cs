@@ -1,4 +1,5 @@
 using System.Collections;
+using DG.Tweening;
 using UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -6,6 +7,8 @@ using UnityEngine.SceneManagement;
 public class Bootstrapper : MonoBehaviour
 {
     private bool _sceneActivationTriggered;
+
+    [SerializeField] private AudioSource audioSource;
 
     private void Start()
     {
@@ -16,6 +19,8 @@ public class Bootstrapper : MonoBehaviour
     {
         _sceneActivationTriggered = false; 
         GameEventManager.CameraMoverStateMethod(false);
+        
+        DOTween.Init();
         
         yield return new WaitUntil(WindowsManager.Instance.Init);
         yield return new WaitUntil(GameDataManager.Instance.Init);
@@ -50,8 +55,9 @@ public class Bootstrapper : MonoBehaviour
         
         WindowsManager.Instance.ShowWindow(EWindow.GamePlay);
         
-        
         yield return new WaitForSeconds(0.5f);
+        
+        audioSource.Play();
         
         Fader.Instance.HideFade(() =>
         {

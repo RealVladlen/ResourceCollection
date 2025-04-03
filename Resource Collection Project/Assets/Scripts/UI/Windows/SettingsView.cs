@@ -30,9 +30,16 @@ namespace UI.Windows
         {
             Show();
 
-            _soundState = GameDataManager.Instance.Sound == 1;
+            if (Application.platform == RuntimePlatform.Android)
+            {
+                _soundState = PlayerPrefs.GetInt("Sound", 1) == 1;
+                _soundState = GameDataManager.Instance.Sound == 1;
+            }
+            else
+                _soundState = GameDataManager.Instance.Sound == 1;
+            
             ApplySoundStateInstantly();
-
+            
             soundButton.onClick.AddListener(SoundChange);
             closeButton.onClick.AddListener(CloseWindow);
             
@@ -45,8 +52,17 @@ namespace UI.Windows
             _soundState = !_soundState;
             ViewUpdate();
 
-            GameDataManager.Instance.Sound = _soundState ? 1 : 0;
-            GameDataManager.Instance.SaveData();
+            if (Application.platform == RuntimePlatform.Android)
+            {
+                PlayerPrefs.SetInt("Sound", _soundState ? 1 : 0);
+                PlayerPrefs.Save();
+                GameDataManager.Instance.Sound = _soundState ? 1 : 0;
+            }
+            else
+            {
+                GameDataManager.Instance.Sound = _soundState ? 1 : 0;
+                GameDataManager.Instance.SaveData();
+            }
         }
 
         private void ViewUpdate()
@@ -60,7 +76,13 @@ namespace UI.Windows
             Color targetColor = _soundState ? onColor : offColor;
             string targetText = _soundState ? "ON" : "OFF";
 
-            _moveAnimation = soundButtonTransform.DOLocalMoveX(targetPosition, duration).SetEase(scaleCurve);
+            RectTransform rectTransform = soundButtonTransform as RectTransform;
+            if (rectTransform != null)
+                _moveAnimation = rectTransform.DOAnchorPosX(targetPosition, duration).SetEase(scaleCurve);
+            
+            else
+                _moveAnimation = soundButtonTransform.DOLocalMoveX(targetPosition, duration).SetEase(scaleCurve);
+            
             _soundImage.DOColor(targetColor, duration);
             _soundText.text = targetText;
         }
@@ -70,7 +92,7 @@ namespace UI.Windows
             float targetPosition = _soundState ? -45f : 45f;
             Color targetColor = _soundState ? onColor : offColor;
             string targetText = _soundState ? "ON" : "OFF";
-
+            
             soundButtonTransform.localPosition = new Vector3(targetPosition, soundButtonTransform.localPosition.y, soundButtonTransform.localPosition.z);
             _soundImage.color = targetColor;
             _soundText.text = targetText;

@@ -7,7 +7,7 @@ public class GameDataManager : MonoBehaviour
 {
     public static GameDataManager Instance;
 
-    [SerializeField] private AudioListener audioListener;
+    [SerializeField] private AudioSource audioSource;
     
     private GameData _data;
 
@@ -18,7 +18,7 @@ public class GameDataManager : MonoBehaviour
         {
             _data.sound = value;
             
-            audioListener.enabled = _data.sound == 1;
+            audioSource.mute = _data.sound != 1;
             
             SaveData();
         }
@@ -55,7 +55,7 @@ public class GameDataManager : MonoBehaviour
     public bool Init()
     {
         _data = SaveSystem.Load();
-        audioListener.enabled = _data.sound == 1;
+        audioSource.mute = _data.sound != 1;
         
         return true;
     }
